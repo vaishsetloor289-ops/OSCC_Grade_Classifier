@@ -7,114 +7,103 @@ from PIL import Image
 import numpy as np
 import pandas as pd
 
-# =========================================
+# =========================
 # PAGE CONFIG
-# =========================================
-
+# =========================
 st.set_page_config(
     page_title="OSCC Histopathology Grading Classifier",
-    page_icon="🔬",
     layout="wide"
 )
 
-# =========================================
-# CUSTOM RESEARCH UI STYLING
-# =========================================
-
+# =========================
+# CUSTOM STYLING
+# =========================
 st.markdown("""
 <style>
 
-/* Background gradient */
-.main {
-    background: linear-gradient(135deg, #0F2027, #203A43, #2C5364);
+/* Remove top spacing */
+.block-container {
+    padding-top: 2rem;
 }
 
-/* White content cards */
-.block-container {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 15px;
-    box-shadow: 0px 10px 25px rgba(0,0,0,0.2);
+/* Full page oncology gradient */
+[data-testid="stAppViewContainer"] {
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+}
+
+/* White cards */
+div[data-testid="stFileUploader"],
+div[data-testid="stButton"],
+div[data-testid="stNumberInput"],
+div[data-testid="stDataFrame"] {
+    background-color: rgba(255,255,255,0.95);
+    padding: 15px;
+    border-radius: 12px;
+    color: black !important;
+}
+
+/* Make headers visible */
+h1, h2, h3, h4, h5, h6, p, label {
+    color: white !important;
 }
 
 /* Header styling */
 .header-title {
-    font-size: 34px;
-    font-weight: 700;
-    color: #FFFFFF;
+    font-size: 38px;
+    font-weight: 800;
     text-align: center;
+    color: #FFFFFF;
 }
 
 .subheader-text {
-    font-size: 16px;
+    font-size: 18px;
     text-align: center;
-    color: #D1E8FF;
-}
-
-/* Prediction Cards */
-.pred-box {
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    font-weight: 600;
-    font-size: 20px;
-}
-
-.moderate {
-    background-color: #FFE0E0;
-    border-left: 8px solid #D32F2F;
-}
-
-.well {
-    background-color: #E6F4EA;
-    border-left: 8px solid #2E7D32;
+    color: #E0F2FF;
+    margin-bottom: 30px;
 }
 
 /* Footer */
 .footer {
     text-align: center;
-    color: #CCCCCC;
     font-size: 13px;
-    margin-top: 50px;
+    color: #DDDDDD;
+    margin-top: 60px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================
-# HEADER SECTION
-# =========================================
-
+# =========================
+# HEADER
+# =========================
 st.markdown("""
 <div class="header-title">
-Oral Squamous Cell Carcinoma Histopathology Grading Classifier
+🔬 Oral Squamous Cell Carcinoma Histopathology Grading Classifier
 </div>
+
 <div class="subheader-text">
-Deep Learning Model (ResNet-50) for Automated Differentiation Grading
+Deep Learning Model (ResNet-50) for Automated Differentiation Grading  
 <br>
 Built by Dr. Vaishnavi Setloor
 </div>
-<br>
 """, unsafe_allow_html=True)
 
-# =========================================
+# =========================
 # LOAD MODEL
-# =========================================
-
+# =========================
 @st.cache_resource
 def load_model():
     model = models.resnet50(pretrained=False)
-    model.fc = nn.Linear(model.fc.in_features, 2)
+    model.fc = nn.Linear(model.fc.in_features, 3)
     model.load_state_dict(torch.load("oscc_resnet50_final.pth", map_location=torch.device("cpu")))
     model.eval()
     return model
 
 model = load_model()
 
-# =========================================
-# TRANSFORMS
-# =========================================
-
+# =========================
+# IMAGE TRANSFORM
+# =========================
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -124,27 +113,28 @@ transform = transforms.Compose([
     )
 ])
 
-class_names = ["Moderate", "Well"]
+class_names = [
+    "Well Differentiated OSCC",
+    "Moderately Differentiated OSCC",
+    "Poorly Differentiated OSCC"
+]
 
-# =========================================
-# FILE UPLOAD
-# =========================================
+# =========================
+# FILE UPLOADER
+# =========================
+st.subheader("Upload Histopathology Images")
 
 uploaded_files = st.file_uploader(
-    "Upload Histopathology Images",
+    "Drag and drop files here",
     type=["jpg", "jpeg", "png"],
     accept_multiple_files=True
 )
-
-# =========================================
-# PROCESS IMAGES
-# =========================================
 
 if uploaded_files:
 
     magnifications = {}
 
-    st.subheader("🔎 Magnification Details")
+    st.subheader("🔬 Magnification Details")
 
     for i, file in enumerate(uploaded_files):
         mag = st.number_input(
@@ -156,11 +146,10 @@ if uploaded_files:
         )
         magnifications[file.name] = mag
 
-    if st.button("🔬 Predict OSCC Grade"):
+    if st.button("🧠 Predict OSCC Grade"):
 
         predictions = []
-        probabilities = []
-        per_image_results = []
+        results_table = []
 
         for file in uploaded_files:
 
@@ -169,64 +158,54 @@ if uploaded_files:
 
             with torch.no_grad():
                 outputs = model(img_tensor)
-                probs = torch.softmax(outputs, dim=1)
-                pred = torch.argmax(probs, dim=1).item()
+                probs = torch.softmax(outputs, dim=1)[0]
+                pred_class = torch.argmax(probs).item()
 
-            predictions.append(pred)
-            probabilities.append(probs.numpy()[0])
+            predicted_label = class_names[pred_class]
+            confidence = float(probs[pred_class])
 
-            per_image_results.append({
+            predictions.append(pred_class)
+
+            # Show image
+            st.image(image, caption=f"{file.name}", width=300)
+
+            # Probability bars
+            st.markdown("### Prediction Probabilities")
+            for idx, cls in enumerate(class_names):
+                st.progress(float(probs[idx]))
+                st.write(f"{cls}: {probs[idx]*100:.2f}%")
+
+            st.success(f"Predicted: {predicted_label} (Confidence: {confidence*100:.2f}%)")
+
+            results_table.append({
                 "Image Name": file.name,
                 "Magnification": magnifications[file.name],
-                "Prediction": class_names[pred],
-                "Moderate Probability (%)": round(probs.numpy()[0][0] * 100, 2),
-                "Well Probability (%)": round(probs.numpy()[0][1] * 100, 2)
+                "Predicted Grade": predicted_label,
+                "Confidence (%)": round(confidence * 100, 2)
             })
 
-        # =========================================
-        # CASE AGGREGATION
-        # =========================================
+            st.markdown("---")
 
-        predictions = np.array(predictions)
-        probabilities = np.array(probabilities)
-
-        majority_vote = np.bincount(predictions).argmax()
-        avg_probs = probabilities.mean(axis=0)
-
-        st.markdown("---")
-        st.subheader("📊 Case-Level Prediction")
-
-        if class_names[majority_vote] == "Moderate":
-            st.markdown(f"""
-            <div class="pred-box moderate">
-            Final Prediction: Moderately Differentiated OSCC
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-            <div class="pred-box well">
-            Final Prediction: Well Differentiated OSCC
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.write("### Average Case Probability")
-
-        st.progress(float(avg_probs[0]))
-        st.write(f"Moderate: {avg_probs[0]*100:.2f}%")
-
-        st.progress(float(avg_probs[1]))
-        st.write(f"Well: {avg_probs[1]*100:.2f}%")
-
-        st.markdown("---")
-        st.subheader("📁 Per-Image Results")
-
-        df = pd.DataFrame(per_image_results)
+        # =========================
+        # RESULTS TABLE
+        # =========================
+        st.subheader("📊 Per-Image Results Summary")
+        df = pd.DataFrame(results_table)
         st.dataframe(df, use_container_width=True)
 
-# =========================================
-# FOOTER
-# =========================================
+        # =========================
+        # AGGREGATED DECISION
+        # =========================
+        st.subheader("🧬 Aggregated Case-Level Prediction")
 
+        final_pred = max(set(predictions), key=predictions.count)
+        final_label = class_names[final_pred]
+
+        st.markdown(f"### Final Predicted Grade: **{final_label}**")
+
+# =========================
+# FOOTER
+# =========================
 st.markdown("""
 <div class="footer">
 This tool is intended strictly for research and academic purposes only.  
@@ -234,6 +213,7 @@ Not approved for clinical diagnostic decision-making.
 Developed using a ResNet-50 deep learning architecture trained on annotated histopathological images.
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
