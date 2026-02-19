@@ -12,35 +12,57 @@ import pandas as pd
 # =========================================
 
 st.set_page_config(
-    page_title="OSCC Grade Classifier",
+    page_title="OSCC Histopathology Grading Classifier",
     page_icon="🔬",
     layout="wide"
 )
 
 # =========================================
-# CLINICAL UI STYLING
+# CUSTOM RESEARCH UI STYLING
 # =========================================
 
 st.markdown("""
 <style>
 
+/* Background gradient */
 .main {
-    background-color: #F4F8FB;
+    background: linear-gradient(135deg, #0F2027, #203A43, #2C5364);
 }
 
-h1 {
-    color: #1F4E79;
+/* White content cards */
+.block-container {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0px 10px 25px rgba(0,0,0,0.2);
 }
 
+/* Header styling */
+.header-title {
+    font-size: 34px;
+    font-weight: 700;
+    color: #FFFFFF;
+    text-align: center;
+}
+
+.subheader-text {
+    font-size: 16px;
+    text-align: center;
+    color: #D1E8FF;
+}
+
+/* Prediction Cards */
 .pred-box {
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 12px;
     margin-bottom: 20px;
+    font-weight: 600;
+    font-size: 20px;
 }
 
 .moderate {
-    background-color: #FFF3CD;
-    border-left: 8px solid #FFB000;
+    background-color: #FFE0E0;
+    border-left: 8px solid #D32F2F;
 }
 
 .well {
@@ -48,14 +70,31 @@ h1 {
     border-left: 8px solid #2E7D32;
 }
 
+/* Footer */
 .footer {
     text-align: center;
-    color: grey;
+    color: #CCCCCC;
+    font-size: 13px;
     margin-top: 50px;
-    font-size: 14px;
 }
 
 </style>
+""", unsafe_allow_html=True)
+
+# =========================================
+# HEADER SECTION
+# =========================================
+
+st.markdown("""
+<div class="header-title">
+Oral Squamous Cell Carcinoma Histopathology Grading Classifier
+</div>
+<div class="subheader-text">
+Deep Learning Model (ResNet-50) for Automated Differentiation Grading
+<br>
+Built by Dr. Vaishnavi Setloor
+</div>
+<br>
 """, unsafe_allow_html=True)
 
 # =========================================
@@ -88,14 +127,6 @@ transform = transforms.Compose([
 class_names = ["Moderate", "Well"]
 
 # =========================================
-# HEADER
-# =========================================
-
-st.title("🔬 OSCC Grade Classifier")
-st.markdown("AI-assisted histopathological grading of Oral Squamous Cell Carcinoma.")
-st.markdown("---")
-
-# =========================================
 # FILE UPLOAD
 # =========================================
 
@@ -106,7 +137,7 @@ uploaded_files = st.file_uploader(
 )
 
 # =========================================
-# PROCESS IF FILES EXIST
+# PROCESS IMAGES
 # =========================================
 
 if uploaded_files:
@@ -125,7 +156,7 @@ if uploaded_files:
         )
         magnifications[file.name] = mag
 
-    if st.button("🔎 Predict OSCC Grade"):
+    if st.button("🔬 Predict OSCC Grade"):
 
         predictions = []
         probabilities = []
@@ -153,7 +184,7 @@ if uploaded_files:
             })
 
         # =========================================
-        # AGGREGATION
+        # CASE AGGREGATION
         # =========================================
 
         predictions = np.array(predictions)
@@ -168,19 +199,15 @@ if uploaded_files:
         if class_names[majority_vote] == "Moderate":
             st.markdown(f"""
             <div class="pred-box moderate">
-            <h3>Final Prediction: Moderate Differentiated OSCC</h3>
+            Final Prediction: Moderately Differentiated OSCC
             </div>
             """, unsafe_allow_html=True)
         else:
             st.markdown(f"""
             <div class="pred-box well">
-            <h3>Final Prediction: Well Differentiated OSCC</h3>
+            Final Prediction: Well Differentiated OSCC
             </div>
             """, unsafe_allow_html=True)
-
-        # =========================================
-        # PROBABILITY BARS
-        # =========================================
 
         st.write("### Average Case Probability")
 
@@ -189,10 +216,6 @@ if uploaded_files:
 
         st.progress(float(avg_probs[1]))
         st.write(f"Well: {avg_probs[1]*100:.2f}%")
-
-        # =========================================
-        # PER IMAGE TABLE
-        # =========================================
 
         st.markdown("---")
         st.subheader("📁 Per-Image Results")
@@ -204,8 +227,14 @@ if uploaded_files:
 # FOOTER
 # =========================================
 
-st.markdown("---")
-st.markdown('<div class="footer">Built by Dr. Vaishnavi Setloor</div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="footer">
+This tool is intended strictly for research and academic purposes only.  
+Not approved for clinical diagnostic decision-making.  
+Developed using a ResNet-50 deep learning architecture trained on annotated histopathological images.
+</div>
+""", unsafe_allow_html=True)
+
 
 
 
