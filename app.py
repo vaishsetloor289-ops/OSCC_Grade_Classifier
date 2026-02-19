@@ -104,15 +104,15 @@ if uploaded_files:
     magnifications = {}
 
     st.subheader("🔍 Magnification Details")
-    for file in uploaded_files:
-        mag = st.number_input(
-            f"Magnification for {file.name}",
-            min_value=1,
-            max_value=100,
-            value=10,
-            key=file.name
-        )
-        magnifications[file.name] = mag
+    for i, file in enumerate(uploaded_files):
+    mag = st.number_input(
+        f"Magnification for {file.name}",
+        min_value=1,
+        max_value=100,
+        value=10,
+        key=f"{file.name}_{i}"
+    )
+    magnifications[file.name] = mag
 
     if st.button("🔎 Predict OSCC Grade"):
 
