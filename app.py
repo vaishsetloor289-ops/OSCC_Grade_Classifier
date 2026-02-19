@@ -5,80 +5,77 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 from PIL import Image
 import numpy as np
+import pandas as pd
 
-# =========================
+# =========================================
 # PAGE CONFIG
-# =========================
+# =========================================
+
 st.set_page_config(
     page_title="OSCC Grade Classifier",
     page_icon="🔬",
     layout="wide"
 )
 
-# =========================
-# CUSTOM STYLING
-# =========================
+# =========================================
+# CLINICAL UI STYLING
+# =========================================
+
 st.markdown("""
 <style>
+
 .main {
     background-color: #F4F8FB;
 }
 
-.title-text {
-    font-size: 36px;
-    font-weight: 700;
-    color: #1B4F72;
-    text-align: center;
+h1 {
+    color: #1F4E79;
 }
 
-.subtitle-text {
-    font-size: 18px;
-    color: #566573;
-    text-align: center;
+.pred-box {
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
 }
 
-.prediction-card {
-    padding: 25px;
-    border-radius: 12px;
-    font-size: 24px;
-    font-weight: 600;
-    text-align: center;
+.moderate {
+    background-color: #FFF3CD;
+    border-left: 8px solid #FFB000;
+}
+
+.well {
+    background-color: #E6F4EA;
+    border-left: 8px solid #2E7D32;
 }
 
 .footer {
     text-align: center;
-    font-size: 14px;
     color: grey;
-    margin-top: 60px;
+    margin-top: 50px;
+    font-size: 14px;
 }
+
 </style>
 """, unsafe_allow_html=True)
 
-# =========================
-# HEADER
-# =========================
-st.markdown('<div class="title-text">🔬 Oral Squamous Cell Carcinoma (OSCC) Grade Classifier</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle-text">AI-based histopathology grading using Fine-Tuned ResNet50</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle-text">Built by <b>Dr. Vaishnavi Setloor</b></div>', unsafe_allow_html=True)
-
-st.divider()
-
-# =========================
+# =========================================
 # LOAD MODEL
-# =========================
+# =========================================
+
 @st.cache_resource
 def load_model():
     model = models.resnet50(pretrained=False)
     model.fc = nn.Linear(model.fc.in_features, 2)
-    model.load_state_dict(torch.load("oscc_resnet50_final.pth", map_location="cpu"))
+    model.load_state_dict(torch.load("oscc_resnet50_final.pth", map_location=torch.device("cpu")))
     model.eval()
     return model
 
 model = load_model()
 
-# =========================
-# TRANSFORM
-# =========================
+# =========================================
+# TRANSFORMS
+# =========================================
+
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -88,38 +85,54 @@ transform = transforms.Compose([
     )
 ])
 
-class_names = ["Moderately Differentiated", "Well Differentiated"]
+class_names = ["Moderate", "Well"]
 
-# =========================
-# IMAGE UPLOAD
-# =========================
+# =========================================
+# HEADER
+# =========================================
+
+st.title("🔬 OSCC Grade Classifier")
+st.markdown("AI-assisted histopathological grading of Oral Squamous Cell Carcinoma.")
+st.markdown("---")
+
+# =========================================
+# FILE UPLOAD
+# =========================================
+
 uploaded_files = st.file_uploader(
     "Upload Histopathology Images",
     type=["jpg", "jpeg", "png"],
     accept_multiple_files=True
 )
 
+# =========================================
+# PROCESS IF FILES EXIST
+# =========================================
+
 if uploaded_files:
 
     magnifications = {}
 
-    st.subheader("🔍 Magnification Details")
+    st.subheader("🔎 Magnification Details")
+
     for i, file in enumerate(uploaded_files):
-    mag = st.number_input(
-        f"Magnification for {file.name}",
-        min_value=1,
-        max_value=100,
-        value=10,
-        key=f"{file.name}_{i}"
-    )
-    magnifications[file.name] = mag
+        mag = st.number_input(
+            f"Magnification for {file.name}",
+            min_value=1,
+            max_value=100,
+            value=10,
+            key=f"{file.name}_{i}"
+        )
+        magnifications[file.name] = mag
 
     if st.button("🔎 Predict OSCC Grade"):
 
         predictions = []
         probabilities = []
+        per_image_results = []
 
         for file in uploaded_files:
+
             image = Image.open(file).convert("RGB")
             img_tensor = transform(image).unsqueeze(0)
 
@@ -131,59 +144,68 @@ if uploaded_files:
             predictions.append(pred)
             probabilities.append(probs.numpy()[0])
 
-        # =========================
+            per_image_results.append({
+                "Image Name": file.name,
+                "Magnification": magnifications[file.name],
+                "Prediction": class_names[pred],
+                "Moderate Probability (%)": round(probs.numpy()[0][0] * 100, 2),
+                "Well Probability (%)": round(probs.numpy()[0][1] * 100, 2)
+            })
+
+        # =========================================
         # AGGREGATION
-        # =========================
-        final_prediction = max(set(predictions), key=predictions.count)
-        avg_probs = np.mean(probabilities, axis=0)
+        # =========================================
 
-        st.divider()
-        st.subheader("📊 Aggregated Case Result")
+        predictions = np.array(predictions)
+        probabilities = np.array(probabilities)
 
-        if final_prediction == 0:
-            bg_color = "#FDEBD0"   # soft orange
-        else:
-            bg_color = "#D6EAF8"   # soft blue
+        majority_vote = np.bincount(predictions).argmax()
+        avg_probs = probabilities.mean(axis=0)
 
-        st.markdown(
-            f"""
-            <div class="prediction-card" style="background-color:{bg_color};">
-            Final Prediction: {class_names[final_prediction]}
+        st.markdown("---")
+        st.subheader("📊 Case-Level Prediction")
+
+        if class_names[majority_vote] == "Moderate":
+            st.markdown(f"""
+            <div class="pred-box moderate">
+            <h3>Final Prediction: Moderate Differentiated OSCC</h3>
             </div>
-            """,
-            unsafe_allow_html=True
-        )
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class="pred-box well">
+            <h3>Final Prediction: Well Differentiated OSCC</h3>
+            </div>
+            """, unsafe_allow_html=True)
 
-        confidence_score = avg_probs[final_prediction]
+        # =========================================
+        # PROBABILITY BARS
+        # =========================================
 
-        st.write(f"### Confidence: {confidence_score*100:.2f}%")
-        st.progress(float(confidence_score))
+        st.write("### Average Case Probability")
 
-        st.write("### Average Class Probabilities")
+        st.progress(float(avg_probs[0]))
         st.write(f"Moderate: {avg_probs[0]*100:.2f}%")
+
+        st.progress(float(avg_probs[1]))
         st.write(f"Well: {avg_probs[1]*100:.2f}%")
 
-        # =========================
-        # INDIVIDUAL RESULTS
-        # =========================
-        st.divider()
-        st.subheader("📋 Individual Image Predictions")
+        # =========================================
+        # PER IMAGE TABLE
+        # =========================================
 
-        for i, file in enumerate(uploaded_files):
-            st.write(f"**{file.name}**")
-            st.write(f"Prediction: {class_names[predictions[i]]}")
-            st.write(f"Moderate Probability: {probabilities[i][0]*100:.2f}%")
-            st.write(f"Well Probability: {probabilities[i][1]*100:.2f}%")
-            st.write("---")
+        st.markdown("---")
+        st.subheader("📁 Per-Image Results")
 
-# =========================
+        df = pd.DataFrame(per_image_results)
+        st.dataframe(df, use_container_width=True)
+
+# =========================================
 # FOOTER
-# =========================
-st.markdown("""
-<div class="footer">
-This AI tool is intended for research and educational purposes only.<br>
-© 2026 Dr. Vaishnavi Setloor
-</div>
-""", unsafe_allow_html=True)
+# =========================================
+
+st.markdown("---")
+st.markdown('<div class="footer">Built by Dr. Vaishnavi Setloor</div>', unsafe_allow_html=True)
+
 
 
