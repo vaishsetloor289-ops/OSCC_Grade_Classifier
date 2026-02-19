@@ -23,7 +23,7 @@ CLASS_MAP = {0: "Moderately Differentiated OSCC", 1: "Well Differentiated OSCC"}
 st.markdown(
     """
     <div style="text-align:center; padding-top:10px;">
-        <h1 style="margin-bottom:0;">Oral Squamous Cell Carcinoma Histopathology Classifier</h1>
+        <h1 style="margin-bottom:0;">🔬 Oral Squamous Cell Carcinoma - Histopathology Grading Classifier</h1>
         <h4 style="margin-top:8px; font-weight:500;">Built by Dr. Vaishnavi Setloor</h4>
         <p style="margin-top:6px; font-size:14px; opacity:0.9;">
             Deep Learning Model (ResNet-50)
@@ -197,7 +197,7 @@ st.markdown(
     """
     <hr>
     <div style="text-align:center; font-size:13px; opacity:0.85;">
-        This app is not intended for clinical diagnostic purposes. Only for research and academic purposes.
+        This application is not intended for clinical diagnostic purposes. Only for research and academic purposes.
         <br>
         © 2026 Vaishnavi Setloor
     </div>
