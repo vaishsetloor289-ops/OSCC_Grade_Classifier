@@ -7,6 +7,7 @@ from PIL import Image
 import numpy as np
 import pandas as pd
 from collections import Counter
+from textwrap import dedent
 
 # -----------------------
 # CONFIG
@@ -24,98 +25,104 @@ CLASS_MAP = {
 # -----------------------
 # OPTIONAL PAGE STYLING
 # -----------------------
-st.markdown("""
-<style>
-.main {
-    padding-top: 1rem;
-}
-.block-container {
-    padding-top: 1.5rem;
-    padding-bottom: 2rem;
-    max-width: 1200px;
-}
-.thesis-header {
-    text-align: center;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    line-height: 1.5;
-}
-.thesis-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 0.2rem;
-    color: #1f2937;
-}
-.thesis-subtitle {
-    font-size: 1.2rem;
-    font-weight: 500;
-    margin-top: 0.4rem;
-    margin-bottom: 0.2rem;
-    color: #374151;
-}
-.thesis-text {
-    font-size: 1rem;
-    margin-top: 0.15rem;
-    margin-bottom: 0.15rem;
-    color: #4b5563;
-}
-.ack-box {
-    margin-top: 0.9rem;
-    margin-bottom: 0.6rem;
-    font-size: 0.98rem;
-    color: #374151;
-}
-.model-note {
-    font-size: 0.9rem;
-    opacity: 0.85;
-    margin-top: 0.5rem;
-}
-.summary-card {
-    background-color: #f8fafc;
-    padding: 1rem 1.2rem;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 1rem;
-}
-.small-muted {
-    font-size: 0.92rem;
-    color: #6b7280;
-}
-</style>
-""", unsafe_allow_html=True)
+st.markdown(
+    dedent("""
+    <style>
+    .main {
+        padding-top: 1rem;
+    }
+    .block-container {
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+        max-width: 1200px;
+    }
+    .thesis-header {
+        text-align: center;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        line-height: 1.5;
+    }
+    .thesis-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+        color: #1f2937;
+    }
+    .thesis-subtitle {
+        font-size: 1.2rem;
+        font-weight: 500;
+        margin-top: 0.4rem;
+        margin-bottom: 0.2rem;
+        color: #374151;
+    }
+    .thesis-text {
+        font-size: 1rem;
+        margin-top: 0.15rem;
+        margin-bottom: 0.15rem;
+        color: #4b5563;
+    }
+    .ack-box {
+        margin-top: 0.9rem;
+        margin-bottom: 0.6rem;
+        font-size: 0.98rem;
+        color: #374151;
+    }
+    .model-note {
+        font-size: 0.9rem;
+        opacity: 0.85;
+        margin-top: 0.5rem;
+    }
+    .summary-card {
+        background-color: #f8fafc;
+        padding: 1rem 1.2rem;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 1rem;
+    }
+    .small-muted {
+        font-size: 0.92rem;
+        color: #6b7280;
+    }
+    </style>
+    """),
+    unsafe_allow_html=True
+)
 
 # -----------------------
 # HEADER
 # -----------------------
-st.markdown("""
-<div class="thesis-header">
-    <div class="thesis-title">
-        🔬 Oral Squamous Cell Carcinoma - Histopathology Grading Classifier
-    </div>
+st.markdown(
+    dedent("""
+    <div class="thesis-header">
+        <div class="thesis-title">
+            🔬 Oral Squamous Cell Carcinoma - Histopathology Grading Classifier
+        </div>
 
-    <div class="thesis-subtitle">
-        Built by Dr. Vaishnavi Setloor
-    </div>
+        <div class="thesis-subtitle">
+            Built by Dr. Vaishnavi Setloor
+        </div>
 
-    <div class="thesis-text">
-        Under the guidance of Dr. Sahana Srinath, Professor &amp; Head, Department of Oral Pathology
-    </div>
+        <div class="thesis-text">
+            Under the guidance of Dr. Sahana Srinath, Professor &amp; Head, Department of Oral Pathology
+        </div>
 
-    <div class="thesis-text">
-        Government Dental College &amp; Research Institute, Bengaluru
-    </div>
+        <div class="thesis-text">
+            Government Dental College &amp; Research Institute, Bengaluru
+        </div>
 
-    <div class="ack-box">
-        <strong>Acknowledgements</strong><br>
-        Dr. Satish Yadav<br>
-        Dr. Jyoti Tahasildhar
-    </div>
+        <div class="ack-box">
+            <strong>Acknowledgements</strong><br>
+            Dr. Satish Yadav<br>
+            Dr. Jyoti Tahasildhar
+        </div>
 
-    <div class="model-note">
-        Deep Learning Model (ResNet-50)
+        <div class="model-note">
+            Deep Learning Model (ResNet-50)
+        </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
+    """),
+    unsafe_allow_html=True
+)
 
 st.write("---")
 
@@ -169,12 +176,15 @@ def predict_image(pil_img: Image.Image):
 # -----------------------
 # INTRO NOTE
 # -----------------------
-st.markdown("""
-<div class="small-muted">
-    Upload one or multiple histopathology images in JPG, JPEG, or PNG format.
-    You may enter the corresponding magnification for each uploaded image before running prediction.
-</div>
-""", unsafe_allow_html=True)
+st.markdown(
+    dedent("""
+    <div class="small-muted">
+        Upload one or multiple histopathology images in JPG, JPEG, or PNG format.
+        You may enter the corresponding magnification for each uploaded image before running prediction.
+    </div>
+    """),
+    unsafe_allow_html=True
+)
 
 st.write("")
 
@@ -233,7 +243,6 @@ if uploaded_files:
                 st.markdown(f"**Confidence:** {conf * 100:.2f}%")
                 st.markdown(f"**Magnification:** {magnifications.get(f.name, '-')}")
                 st.progress(float(probs[pred]))
-
                 st.write("**Class Probabilities:**")
                 st.write(f"- Moderately Differentiated OSCC: {probs[0] * 100:.2f}%")
                 st.write(f"- Well Differentiated OSCC: {probs[1] * 100:.2f}%")
@@ -249,9 +258,6 @@ if uploaded_files:
                 "Confidence (%)": round(float(conf * 100), 2),
             })
 
-        # -----------------------
-        # AGGREGATED CASE RESULT
-        # -----------------------
         st.subheader("Aggregated Case Result")
 
         vote_counts = Counter(preds)
@@ -264,16 +270,19 @@ if uploaded_files:
         final_label_avg = CLASS_MAP[final_pred_avg]
         avg_conf = float(np.max(avg_probs))
 
-        st.markdown(f"""
-<div class="summary-card">
-    <h4 style="margin-top:0; margin-bottom:0.6rem;">Case Summary</h4>
-    <p style="margin:0.2rem 0;"><strong>Total Images Analysed:</strong> {len(preds)}</p>
-    <p style="margin:0.2rem 0;"><strong>Majority Vote Prediction:</strong> {final_label_majority}</p>
-    <p style="margin:0.2rem 0;"><strong>Average Probability Prediction:</strong> {final_label_avg}</p>
-    <p style="margin:0.2rem 0;"><strong>Majority Agreement:</strong> {agreement:.1f}%</p>
-    <p style="margin:0.2rem 0;"><strong>Average Confidence:</strong> {avg_conf * 100:.2f}%</p>
-</div>
-""", unsafe_allow_html=True)
+        st.markdown(
+            dedent(f"""
+            <div class="summary-card">
+                <h4 style="margin-top:0; margin-bottom:0.6rem;">Case Summary</h4>
+                <p style="margin:0.2rem 0;"><strong>Total Images Analysed:</strong> {len(preds)}</p>
+                <p style="margin:0.2rem 0;"><strong>Majority Vote Prediction:</strong> {final_label_majority}</p>
+                <p style="margin:0.2rem 0;"><strong>Average Probability Prediction:</strong> {final_label_avg}</p>
+                <p style="margin:0.2rem 0;"><strong>Majority Agreement:</strong> {agreement:.1f}%</p>
+                <p style="margin:0.2rem 0;"><strong>Average Confidence:</strong> {avg_conf * 100:.2f}%</p>
+            </div>
+            """),
+            unsafe_allow_html=True
+        )
 
         colA, colB = st.columns(2)
 
@@ -300,16 +309,19 @@ if uploaded_files:
 st.write("")
 st.write("")
 
-st.markdown("""
-<hr>
-<div style="text-align:center; font-size:13px; opacity:0.85; line-height:1.6;">
-    This application is intended strictly for research and academic purposes and not for clinical diagnostic use.
-    <br>
-    Developed as part of thesis-related academic work.
-    <br>
-    © 2026 Vaishnavi Setloor
-</div>
-""", unsafe_allow_html=True)
+st.markdown(
+    dedent("""
+    <hr>
+    <div style="text-align:center; font-size:13px; opacity:0.85; line-height:1.6;">
+        This application is intended strictly for research and academic purposes and not for clinical diagnostic use.
+        <br>
+        Developed as part of thesis-related academic work.
+        <br>
+        © 2026 Vaishnavi Setloor
+    </div>
+    """),
+    unsafe_allow_html=True
+)
 
 
 
