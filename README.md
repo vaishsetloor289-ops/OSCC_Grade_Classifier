@@ -4,7 +4,7 @@ Deep learning model that grades oral squamous cell carcinoma (OSCC) differentiat
 
 Built by Dr Vaishnavi Setloor 
 ## Live demo
-[Try the app](PASTE-YOUR-STREAMLIT-LINK-HERE)
+[Try the app]https://osccgradeclassifier.streamlit.app
 
 ## Method
 - ImageNet-pretrained ResNet-50, fine-tuned in PyTorch
